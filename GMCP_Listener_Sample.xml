@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+<!DOCTYPE muclient>
+
+<muclient>
+<plugin
+   name="GMCP_Listener_Sample"
+   author="Samakhulis"
+   id="0524718c1ade319f1831fa12"
+   language="Lua"
+   purpose="Scripts using GMCP data"
+   date_written="2011-09-08 15:38:00"
+   requires="4.35"
+   version="2.0"
+   save_state="y"
+   >
+   
+</plugin>
+
+<aliases>
+</aliases>
+
+<triggers>
+</triggers>
+
+<script><![CDATA[
+
+dofile(GetInfo(60) .. "Custom\\GMCP_Functions.lua")
+idGMCP = "fd1317dca87167934e167aa2"
+
+-- Local GMCP Data
+-- Create local, empty variables to dump GMCP data from table into
+
+function OnPluginBroadcast (msg, id, name, text)
+	if (id == idGMCP) then
+		if (msg == 201) then
+			json = require("json")
+			module, data = SplitGMCP(text)
+			if module == "Room.Info" then -- Change to desired module name (Char.Vitals, Com.Channel.List, etc...)
+				t = json.decode(data)
+				-- Put array-based scripting here (main array = "t")
+			end -- if Module
+		end -- if 201
+	end -- if GMCP
+end -- function
+
+]]>
+</script>
+</muclient>
