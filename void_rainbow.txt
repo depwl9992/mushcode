@@ -1,0 +1,6 @@
+# Written as a client-side alias for the adult-themed MUD "The Void" (void.greenfinch.com:1234)
+# Phantasm is a higher skill which can be attained or purchased from in-game leveling. It projects world-wide illusions. Illusions, on the other hand are local to the room the player is in.
+ 
+Alias: rainbowgasm
+Script (Phantasm): phan A <boldamb>R<prv>a<cmd>I<boldcmd>n<boldply>B<mob>o<amb>W<ply> of color sweeps over the sky.
+Script (Illusion): illusion A <boldamb>R<prv>a<boldcmd>I<boldply>n<ply>B<mob>o<amb>W<cmd> of color sweeps over the sky.
