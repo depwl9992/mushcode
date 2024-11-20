@@ -1,0 +1,133 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+<!DOCTYPE muclient>
+
+<muclient>
+<plugin
+   name="OOB_Tester"
+   author="Daniel Powell"
+   id="9fb6f35ca9de5dd7490565c6"
+   language="Lua"
+   purpose="Test OnPluginBroadcast for Telnet Options"
+   date_written="2019-01-16 11:23:00"
+   requires="4.90"
+   version="1.0"
+   >
+
+</plugin>
+
+<aliases>
+  <alias
+   match="gmcp add module *"
+   enabled="y"
+   send_to="12"
+  >
+  <send>
+    Note("Adding %1 to GMCP module list")
+    Send_GMCP_Packet('Core.Supports.Add ["%1"]')
+  </send>
+  </alias>
+  <alias
+   match="gmcp remove module *"
+   enabled="y"
+   send_to="12"
+  >
+  <send>
+    Note("Removing %1 to GMCP module list")
+    Send_GMCP_Packet('Core.Supports.Remove ["%1"]')
+  </send>
+  </alias>
+  <alias
+   match="gmcp hello"
+   enabled="y"
+   send_to="12"
+  >
+  <send>
+    Note("Wave to GMCP")
+    Send_GMCP_Packet(string.format('Core.Hello{ "client": "MUSHclient", "version": "%s" }', Version()))
+  </send>
+  </alias>
+</aliases>
+
+<script>
+<![CDATA[
+-- Ripped off from Nick Gammon's GMCP Handler
+-- https://www.gammon.com.au/gmcp
+-- https://raw.githubusercontent.com/nickgammon/plugins/master/GMCP_handler_NJG.xml
+
+require "tprint"
+require "json"
+
+-- Telnet Commands  
+local SB        = 0xFA -- 250
+local WILL      = 0xFB -- 251
+local WONT      = 0xFC -- 252
+local DO        = 0xFD -- 253
+local DONT      = 0xFE -- 254
+local IAC       = 0xFF -- 255
+local SE        = 0xF0 -- 240
+
+-- Standard Telnet Options (http://pcmicro.com/netfoss/telnet.html)
+local BIN       = 0x00 -- 000
+local Echo      = 0x01 -- 001
+local SGA       = 0x03 -- 003
+local STA       = 0x05 -- 005
+local TMK       = 0x06 -- 006
+local TTY       = 0x18 -- 007
+local WINSIZE   = 0x1F -- 031
+local BAUD      = 0x20 -- 032
+local FLOWCTRL  = 0x21 -- 033
+local LINEMODE  = 0x22 -- 034
+local ENVVAR    = 0x24 -- 036
+
+-- Custom Telnet Options
+local Pueblo    = 0x22 -- 034 In MUSHClient to PennMUSH, server initiates with IAC DO, client responds with IAC WILL
+local charset   = 0x2A -- 42
+local MSDP      = 0x45 -- 69
+local MSSP      = 0x46 -- 70
+local MCCPv1    = 0x55 -- 85
+local MCCPv2    = 0x56 -- 86
+local MSP       = 0x5A -- 90
+local MXP       = 0x5B -- 91
+local ATCP      = 0xC8 -- 200
+local GMCP      = 0xC9 -- 201
+
+---------------------------------------------------------------------------------------------------
+-- Mushclient callback function when telnet SB data received.
+---------------------------------------------------------------------------------------------------
+function OnPluginTelnetRequest (msg_type, data)
+   Note("We are being asked if we support an OOB type: Band " .. msg_type .. ", Data: " .. data)
+   if msg_type == MSSP or msg_type == GMCP then
+     Note("- Yes we do.")
+     -- Indicate that we can read MSSP/GMCP
+     if msg_type == GMCP and data == "SENT_DO" then
+        Note ("- Enabling GMCP.") 
+        -- This hard-coded block may need to be made into a config table as we add more message types.
+        Send_GMCP_Packet (string.format ('Core.Hello { "client": "MUSHclient", "version": "%s" }', Version()))
+        -- Send_GMCP_Packet ('Core.Supports.Set [ "Room 1" ]')
+        Note("GMCP ADD MODULE ROOM 1 to add room info. Also supported: CHAR 1, .") 
+      end -- if GMCP login needed (just sent DO)
+      return true
+   else
+      return false -- return this for now.
+   end -- if
+end -- function OnPluginTelnetRequest
+
+function OnPluginTelnetSubnegotiation (msg_type, data)
+    Note("We are being sent a message: Band " .. msg_type .. ", Data: " .. data)   
+end -- function OnPluginTelnetSubnegotiation
+
+---------------------------------------------------------------------------------------------------
+-- Helper function to send GMCP data.
+---------------------------------------------------------------------------------------------------
+function Send_GMCP_Packet (what)
+   assert (what, "Send_GMCP_Packet passed a nil message.")
+   Note("Sending Packet with contents " .. what)
+   SendPkt (string.char (IAC, SB, GMCP) .. 
+           (string.gsub (what, IAC, IAC .. IAC)) ..  -- IAC becomes IAC IAC (Previously: "\255","\255\255" )
+            string.char (IAC, SE))
+end -- Send_GMCP_Packet
+
+]]>
+</script>
+
+</muclient>
