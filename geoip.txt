@@ -17,6 +17,7 @@
 &FUNC_SECURE geoip=[edit(regeditall(stripansi(%0),\\\\$,),\\%,,\\[,,\\],,#,,&,,\\\",\",\\\\n\\\\n,%r,\\\\n,%r,\\\\,,)]
 &RESPONSE geoip=th setq(1,[u(func_secure,trim(json_query(edit(%0,\\\\u2013,-,\\\\u2014,-,\\\\u2018,',\\\\u2019,',\\\\u201c,',\\\\u201d,'), get, message),\"))]);th setq(2,%0);@break strmatch(%q1,Failed:*)=say Some sort of trouble is brewing. Take shelter.; @emit %r[ansi(v(color_recv),%0)]
 
+@@ Usage:
 @@ > geoip 23.31.96.97
 @@
 @@ 23.31.96.97
