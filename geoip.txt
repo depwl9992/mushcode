@@ -16,3 +16,9 @@
 &DO_GEOIP geoip=$geoip *:@if [haspower(%!,can_http)] = {th setq(Content-Type,application/json);th setq(0,json(object, ip, json(string, %0))); @http/post %!/response=https://<server_url>.com/geoip.php,%q0; @remit %L=%r%0}, @remit %L=%rMissing CAN_HTTP @power.
 &FUNC_SECURE geoip=[edit(regeditall(stripansi(%0),\\\\$,),\\%,,\\[,,\\],,#,,&,,\\\",\",\\\\n\\\\n,%r,\\\\n,%r,\\\\,,)]
 &RESPONSE geoip=th setq(1,[u(func_secure,trim(json_query(edit(%0,\\\\u2013,-,\\\\u2014,-,\\\\u2018,',\\\\u2019,',\\\\u201c,',\\\\u201d,'), get, message),\"))]);th setq(2,%0);@break strmatch(%q1,Failed:*)=say Some sort of trouble is brewing. Take shelter.; @emit %r[ansi(v(color_recv),%0)]
+
+@@ > geoip 23.31.96.97
+@@
+@@ 23.31.96.97
+@@
+@@ {"country":"United States","subdiv":"Virginia","city":"Richmond","lat":37.5537,"lon":-77.4602}
