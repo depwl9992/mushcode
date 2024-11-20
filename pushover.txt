@@ -1,0 +1,23 @@
+@@ Pushover client written by Daniel Powell, 2024-11-20
+@ This serves as a simple example to trigger push notifications through the Pushover API via the HTTP websocket commands.
+@ You will need your Pushover User Key (from https://pushover.net) and Application Token (from https://pushover.net/apps/build).
+@
+@ This may be an incomplete script, but should leave room to expand and modify it to suit your needs.
+@ I use it in my events handler to notify me of player logins and SQL errors as well as my homebrew player registration system to remind me to create a character every 2 hours.
+@
+@ The following is my events handler script.
+
+@create Pushover Handler
+&player`connect Pushover Handler=@trigger #6643/f_notify_pushover=PLAYER+CONNECT:+[name(%0)],Event:+PLAYER+CONNECT%rPlayer:+[name(%0)]%rTime:+[time()]
+&f_notify_pushover Pushover Handler=think [setq(Content-Type,application/x-www-form-urlencoded)][setq(token,v(pushover`token))][setq(user,v(pushover`user))][setq(title,%0)][setq(message,%1)][setq(timestamp, [time()])]; @http/post %!/pushover`response=https://api.pushover.net/1/messages.json, token=%q<token>&user=%q<user>&message=%q<message>&title=%q<title>&timestamp=%q<timestamp>&sound=BeepBoopBeep
+&pushover`debug Pushover Handler=0
+&pushover`response Pushover Handler=@if [t(v(pushover`debug))] = {@chat wizards=Pushover - %q<status> | %q<content-type> | %0}
+&pushover`token Pushover Handler=<token from Pushover>
+&pushover`user Pushover Handler=<user ID from Pushover>
+
+@@ If this is your event handler, you can set it via @config or edit your mush.cnf file.
+@config/set event_handler=[num(Pushover Handler)]
+
+@@ Then log out and log back in to test!
+LOGOUT
+connect <user> <pass>
