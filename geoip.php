@@ -1,7 +1,7 @@
 <?php
 // Built from MaxMind's example program at https://maxmind.github.io/GeoIP2-php/
 // I use Composer to load in third-party libraries.
-
+// This is intended to return raw JSON data back to the MUSH and processed by the RESPONSE attrib (see geoip.txt).
 require_once 'vendor/autoload.php';
 use GeoIp2\Database\Reader;
 $version = "GeoLite2-City_20241119";
