@@ -1,0 +1,48 @@
+@@ ----Wanderer Parent---- (#7718)
+@create ----Wanderer Parent----
+@lock/Basic ----Wanderer Parent----=me&!me
+@lset ----Wanderer Parent----/Basic=!no_inherit
+@set ----Wanderer Parent---- = OPAQUE
+@set ----Wanderer Parent---- = STICKY
+@set ----Wanderer Parent---- = SAFE
+@set ----Wanderer Parent---- = ITEM
+&ABS_MAX ----Wanderer Parent----=1800
+&ABS_MIN ----Wanderer Parent----=15
+&AREA_LIMIT ----Wanderer Parent----=1
+&BORDER_LIMIT ----Wanderer Parent----=1
+&DESCRIBE ----Wanderer Parent----=This is a nondescript wanderer.%r%r[eval(me,msg_help)]
+@set ----Wanderer Parent----/DESCRIBE=no_command visual prefixmatch public nearby
+&DO_HELP ----Wanderer Parent----=$wanderer help:@pemit %# = %r[eval(me,msg_help)]
+&EXIT_NAME ----Wanderer Parent----=lcstr([if([t([name([xget(me,next_exit)])])],[name([xget(me,next_exit)])],[xget(me,next_exit)])
+&FILTER ----Wanderer Parent----=[and(u(me/filter`areas,%0),u(me/filter`borders,%0),u(me/filter`doors,%0))]
+@set ----Wanderer Parent----/FILTER=no_command prefixmatch
+&FILTER`AREAS ----Wanderer Parent----=[if([and(t(xget(me,area_limit)),[not(xget(%0,area_limit_bypass))])],[strmatch(zone(home(%0)),zone(loc(%0)))],1)]
+&FILTER`BORDERS ----Wanderer Parent----=[if(t(xget(me,border_limit)),[not([xget(%0,isborder)])],1)]
+&FILTER`COMMENT ----Wanderer Parent----=If the wanderer is border-limited, allow the wanderer to take the exit if it is not a border or the door is open (if a door exists). Otherwise, only block the wanderer with a door. -- Exits are validated when this function returns a 1 and filtered out when 0.
+&FILTER`DOORS ----Wanderer Parent----=[and([if(hasattrval(%0,dooropen),[xget(%0,dooropen)],1)],[or([elock(%0/eval,me)][@@(2018-12-09: testlock does not evaluate eval-locks!!!!)],[testlock(lock(%0),me)],[strmatch(*UNLOCKED*,[lock(%0)])])])]
+&GET_GOING ----Wanderer Parent----=@switch [t(xget(me,next_exit))] = 1,{@wait [rand([max([xget(me,min_time)],v(abs_min))],[min([xget(me,max_time)],v(abs_max))])] = {go [xget(me,next_exit)];@trigger me/looper}},{@wait [rand([max([xget(me,min_time)],v(abs_min))],[min([xget(me,max_time)],v(abs_max))])] = {@trigger me/looper}
+&LOOPER ----Wanderer Parent----=@set me = next_exit:[if(u(reset_midnight),home,[elements(filterbool(me/filter,lvexits(%L)),rand(1,words(filterbool(me/filter,lvexits(%L)))))])];think [xget(me,next_exit)];@trigger me/get_going
+&MAX_TIME ----Wanderer Parent----=180
+&MIN_TIME ----Wanderer Parent----=90
+&MSG_HELP ----Wanderer Parent----=Please set the following attributes:%r%r[cmd(MIN_TIME=##)], [cmd(MAX_TIME=##)] - Timer window to wait before wandering%r[cmd(OMOVE)], [cmd(OXMOVE)] - With leading \%r%r[cmd(@DESC)], [cmd(STATUS)]%r%rAlso set the [cmd(RACE)] attrib, [cmd(R_<race>)] flag, and [cmd(C_<class>)] flag if applicable.%r%rTo keep the wanderer from being stolen, [cmd(@lock/basic [num(me)]=[num(me)]&![num(me)])] (should be inherited by default).%r%r[cmd(BORDER_LIMIT = 1|0)] - Should the wanderer be blocked by border exits or not?%r\(Set [cmd(ISBORDER=1)] on an exit to specify a border.\)%r%r[cmd(AREA_LIMIT = 1|0)] - Should the wanderer be blocked by the transition between one area and the other? This checks that source and destination room zones are the same.%r\(Setting [cmd(AREA_LIMIT_BYPASS=1)] on an exit connecting two areas will allow an area-limited wanderer to still use the exit. Example: A wanderer should navigate around both a city and a personal house inside that city.\)%r%r12-27-2015 - Wanderers will now automatically GO HOME rather than choosing a next exit during 00:01 through 00:59 every evening. This is to make sure they don't go off and get lost.%r%r12-27-2015 - Absolute Minimum and Absolute Maximum wait-times are hard set to 15 and 1800 seconds respectively. Any local settings beyond these limits will be saturated during calculation.
+&OMOVE ----Wanderer Parent----=%r[capstr([name(me)])] walks in.
+@set ----Wanderer Parent----/OMOVE=no_command prefixmatch noname
+&OXMOVE ----Wanderer Parent----=%r[capstr([name(me)])] walks out to the [u(me/exit_name)].
+@set ----Wanderer Parent----/OXMOVE=no_command prefixmatch noname
+&RESET_MIDNIGHT ----Wanderer Parent----=[eq(0,timefmt($H))][@@(Reset all wanderers to HOME during the midnight hour.)]
+&REST_END ----Wanderer Parent----=0
+&REST_START ----Wanderer Parent----=0
+
+@@ Test wanderer mob - Run this
+@create A Flock of Seagulls
+@parent seagulls=----Wanderer Parent----
+@desc seagulls=A swirling, whirling cloud of seagulls flying high in the air.
+@omove seagulls=swoops in.
+@oxmove seagulls=swoops out.
+&area_limit seagulls=0
+&border_limit seagulls=1
+&max_time seagulls=90
+&min_time seagulls=15
+@startup seagulls=@trigger me/looper
+drop seagulls
+@trigger seagulls/looper
