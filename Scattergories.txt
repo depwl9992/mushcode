@@ -1,0 +1,90 @@
+@@ Scattergories by daniko@M*U*S*H
+@@ Release: 2018-04-05
+@@
+@@ A working game of Scattergories. This version only handles the dice roll (to pick a letter), category list selection, multiplayer answers, and clearing.
+@@ A rudimentary "this is a valid answer" also exists during gameplay (i.e. an answer begins with the correct letter).
+@@ There are not yet any scoring or timer functions, but these are not hard to track IRL. As a result, gameplay is fairly free-form and non-restrictive.
+@@
+@@ SCATTER HELP lists all available commands.
+@@ This system should just work as is and is tested with PennMUSH 1.8.6p2. Afaik, my custom @functions have been replaced with their hardcode constituents.
+@@ I recommend creating empty objects and @parenting to this for ease of distribution.
+@@
+@@ Notes:
+@@ - The STATUS attribute is the Fairy Garden's version of shortdesc for a room appearances. Customize or remove at your leisure.
+@@ - Though I don't like it myself, +command formatting is included but optional.
+@@ - Formatting of the CMD`LIST_ALL is still a bit weird to me as far as displaying multiple users' answers to the room. I may update this at a later date.
+@@
+
+@create Scattergories
+@lset Scattergories/Basic=no_inherit
+@set Scattergories = OPAQUE
+&ALIAS Scattergories=scat scatter
+@set Scattergories/ALIAS=no_command visual prefixmatch
+&ANSWERS Scattergories=
+@set Scattergories/ANSWERS=no_command
+&AUTHOR Scattergories=alara@tfgmush.org
+@set Scattergories/AUTHOR=no_command
+
+&CMD Scattergories=
+&CMD`ANSWER Scattergories=$^\+?scatter(gories)? (quietly\s*)?answer (\d+) (.+)$:&answers`%#`%3 me=[capstr(%4)];@pemit %# = %rYou submit an answer for Item %3.[if(not(t(%2)),%r%r[u(fun`current_letter)]%r[u(fun`list_answers,[v(current_list)],%#)])]
+@set Scattergories/CMD`ANSWER=regexp
+&CMD`CLEAR Scattergories=$^\+?scatter(gories)? (reset|clear)(\s*my)? answers$:@pemit %# = %rYou clear your own answers for the current scattergories round.;@dolist [lattr(me/answers`%#`*)] = {&%i0 me}
+@set Scattergories/CMD`CLEAR=regexp
+&CMD`CLEAR_ALL Scattergories=$^\+?scatter(gories)? (reset|clear) all (answers)?$:@pemit %# = %rYou clear all answers for the current scattergories round.;@oemit %# = %N clears all answers for the current scattergories round.;@dolist [lattr(me/answers`*)] = {@dolist [lattr(me/%i0`*)] = {&%i0 me}}
+@set Scattergories/CMD`CLEAR_ALL=regexp
+&CMD`HELP Scattergories=$^\+?scatter(gories)? help$:@pemit %# = %r[eval(me,msg`help)]
+@set Scattergories/CMD`HELP=regexp
+&CMD`LIST Scattergories=$^\+?scatter(gories)? (read|read list|list)(\s*\d+)?$:@pemit %# = %r[if(and(gt(val(%3),0),lte(val(%3),words(lattrp(me/list`**)))),setq(n,val(%3),c,1),[setq(n,[xget(me,current_list)],c,0)])][if(not(%qc),[u(fun`current_letter)][u(fun`list_answers,[val(%qn)],%#)],[u(fun`list,[val(%qn)])])]
+@set Scattergories/CMD`LIST=regexp
+&CMD`LIST_ALL Scattergories=$^\+?scatter(gories)? (list|list all|all|reveal) answers$:@emit %r[u(fun`list_all_answers,[xget(me,current_list)])]%r%r[eval(me,msg`prompt_endround)]
+@set Scattergories/CMD`LIST_ALL=regexp
+&CMD`ROLL Scattergories=$^\+?scatter(gories)? roll(\s*dic?e)?(\s*adv(anced)?)?$:@emit %rThe Scattergories die tumbles with an awkward clatter before coming to rest and displaying the letter '[ansi(hw,[setr(l,[randword(xget(me,[if(gt(strlen(%3),0),letters-adv,letters)]))])])]'[attrib_set(me/current_letter,%ql)]!%r%r[eval(me,msg`prompt_roll)]
+@set Scattergories/CMD`ROLL=regexp
+&CMD`SHUFFLE Scattergories=$^\+?scatter(gories)? (shuffle|pick)(\s*(list)?(\s*\d+)?)?$:@emit %r[if(and(gt(val(%5),0),lte(val(%5),words(lattrp(me/list`**)))),%N rifles through the pack of Scattergories lists and picks out [ansi(hw,List [val(%5)][attrib_set(me/current_list,[val(%5)])])].%r[iter(xget(me,LIST`[val(%5)]),%r#@ - ##,|)],%N shuffles through the deck of available Scattergories lists and randomly chooses [ansi(hw,List [setr(l,[rand(1,words(lattrp(me/list`**)))])])][attrib_set(me/current_list,%ql)])].%r%r[eval(me,msg`prompt_shuffle)]
+@set Scattergories/CMD`SHUFFLE=regexp
+
+&DESCRIBE Scattergories=Type [ansi(hy,SCATTER HELP)] to see a list of commands available.%r%r[u(fun`current_letter)]%r[u(fun`list_answers,[xget(me,current_list)],%#)]
+@set Scattergories/DESCRIBE=no_command visual prefixmatch public nearby
+
+&FUN Scattergories=
+&FUN`CURRENT_LETTER Scattergories=[if(t(xget(me,current_letter)),\{\{%bCurrent Letter: '[ansi(hg,[xget(me,current_letter)])]'%b\}\})]
+&FUN`LIST Scattergories=[center(Scattergories List %0,30,[ansi(hr,-=)])]%r[iter([xget(me,LIST`[val(%0)])],%r#@ - ##,|)]
+&FUN`LIST_ALL_ANSWERS Scattergories=[center(Scattergories List %0,30,[ansi(hr,-=)])]%r[iter([xget(me,LIST`[val(%0)])],%r[setr(a,#@)] - ##%b[iter(lattr(me/answers`*),[if(hasattrval(me/%i0`%qa),[ansi(hw,[name([right(%i0,[sub(strlen(%i0),8)])])]:[xget(me,%i0`%qa)])]%b)])],|)]
+&FUN`LIST_ANSWERS Scattergories=[if(and(t(xget(me,current_letter)),t(%0)),%r%r[center(Scattergories List %0,30,[ansi(hr,-=)])]%r[iter([xget(me,LIST`[val(%0)])],%r#@ - ##[if(hasattrval(me/[setr(a,answers`%1`#@)]),: [ansi([if(strmatch(left([xget(me,%qa)],1),v(current_letter)),hg,hr)],[xget(me,answers`%1`#@)])])],|)]%r%r[eval(me,msg`prompt_playing)],[if(not(t(xget(me,current_letter))),[eval(me,msg`prompt_noletter)])][if(not(t(%0)),%r[eval(me,msg`prompt_nolist)])])]
+
+&LETTERS Scattergories=A B C D E F G H I J K L M N O P R S T W
+&LETTERS-ADV Scattergories=A B C D E F G H I J K L M N O P Q R S T U V W X Y Z
+
+&LIST Scattergories=
+&LIST`1 Scattergories=A boy's name|A river|An animal|Things that are cold|Insects|TV Shows|Things that grow|Fruits|Things that are black|School Subjects|Movie Titles|Musical Instruments
+&LIST`10 Scattergories=Sports|Song titles|Parts of the body|Ethnic foods|Things you shout|Birds|A girl's name|Ways to get from here to there|Items in a kitchen|Villains|Flowers|Things you replace
+&LIST`11 Scattergories=Baby foods|Famous duos and trios|Things found in a desk|Vacation spots|Diseases|Words associated with money|Items in a vending machine|Movie titles|Games|Things you wear|Beers|Things at a circus
+&LIST`12 Scattergories=Vegetables|States|Things you throw away|Occupations|Appliances|Cartoon characters|Types of drinks|Musical groups|Store names|Things at a football game|Trees|Personality traits
+&LIST`13 Scattergories=Video games|Electronic gadgets|Board games|Things that use a remote|Card games|Internet lingo|Offensive words|Wireless things|Computer parts|Software|Websites|Game terms
+&LIST`14 Scattergories=Things in a grocery store|Reasons to quit your job|Things that have stripes|Tourist attractions|Diet foods|Things found in a hospital|Food/Drink that is green|Weekend activities|Acronyms|Seafood|Christmas songs|Words ending in "-n"
+&LIST`15 Scattergories=Words with double letters|Childrens' books|Things found at a bar|Sports played outdoors|Names used in songs|Foods you eat raw|Places in Europe|Olympic events|Things you see at the zoo|Math terms|Animals in books or movies|Things to do at a party
+&LIST`16 Scattergories=Kinds of soup|Things found in New York|Things you get tickets for|Things you do at work|Foregn words used in English|Things you shouldn't touch|Spicy foods|Things at a carnival|Things you make|Places to hang out|Animal noises|Computer programs
+&LIST`17 Scattergories=Honeymoon spots|Things you buy for kids|Things that can kill you|Reasons to take out a loan|Words associated with winter|Things to do on a date|Historic events|Things you store items in|Things you do everyday|Things you get in the mail|Things you save up to buy|Things you sit on.
+&LIST`18 Scattergories=Reasons to make a phone call|Types of weather|Titles people can have|Things that have buttons|Items you take on a road trip|Things that have wheels|Reasons to call 911|Things that make you smile|Ways to kill time|Things that can get you fired|Hobbies|Holiday activities
+&LIST`2 Scattergories=Authors|Bodies of Water|A bird|Countries|Cartoon Characters|Holidays|Things that are square|In the NWT(Northwest Territories, Canada)|Clothing|A relative|Games|Sports Stars
+&LIST`3 Scattergories=School supplies|Things that are hot|Heroes|A girl's name|Fears|TV Stars|Colors|A fish|Fruits|Provinces or States|Sports Equipment|Tools
+&LIST`4 Scattergories=Breakfast foods|Gifts|Flowers|Ice cream flavors|A drink|Toys|Cities|Things in the kitchen|Ocean things|Nicknames|Hobbies|Parts of the body
+&LIST`5 Scattergories=Sandwiches|Items in a catalog|World Leaders/Politicians|School Subjects|Excuses for being late|Ice cream flavors|Things that jump/bounce|Television stars|Things in a park|Foreign cities|Stones/Gems|Musical instruments
+&LIST`6 Scattergories=Nicknames|Things in the sky|Pizza toppings|Colleges/Universities|Fish|Countries|Things that have spots|Historical figures|Something you're afraid of|Terms of endearment|Items in this room|Drugs that are abused
+&LIST`7 Scattergories=Fictional characters|Menu items|Magazines|Capitals|Kinds of candy|Items you save up to buy|Footware|Something you keep hidden|Items in a suitcase|Things with tails|Sports equipment|Crimes
+&LIST`8 Scattergories=Things that are sticky|Awards/ceremonies|Cars|Spices/Herbs|Bad habits|Cosmetics/Toiletries|Celebrities|Cooking utinsels|Reptiles/Amphibians|Parks|Leisure activities|Things you're allergic to
+&LIST`9 Scattergories=Restaraunts|Notorious people|Fruits|Things in a medicine cabinet|Toys|Household chores|Bodies of water|Authors|Halloween costumes|Weapons|Things that are round|Words associated with exercize
+
+&MSG Scattergories=
+&MSG`HEAD Scattergories=[lit(  ,--.)]%r[lit( /   o\ )]%r|%b(%b%b_/%r[lit(|   \_)]%r[lit(|    _|)]%r[lit(|   |)]
+&MSG`HELP Scattergories=[center(Scattergories Help,30,[ansi(hr,-=)])]%r[ansi(hy,SCATTER SHUFFLE)] - Randomly choose a category list from the 18 available.%r[ansi(hy,SCATTER PICK <1-18>)] - Pick a specific category list for this round. Invalid numbers will revert to a randomly chosen category.%r[ansi(hy,SCATTER ROLL)] - Roll the d20 die to pick a letter for this round.%r[ansi(hy,SCATTER ROLL ADV)] - Roll the d26 for a chance to pick Q, U, V, X, Y or Z.%r[ansi(hy,SCATTER \[LIST ALL|REVEAL\] ANSWERS)] - List everyone's answers to compare.%r[ansi(hy,SCATTER CLEAR ALL ANSWERS)] - Clear all answers for every player.%r%r[ansi(hy,SCATTER LIST)] - Read the current category list (same as the description).%r[ansi(hy,SCATTER LIST <1-18>)] - Read a specific category list.%r[ansi(hy,SCATTER \[QUIETLY\] ANSWER <#> <answer>)] - Answer a question in this round (QUIETLY will not re-display the current letter or list).%r[ansi(hy,SCATTER CLEAR ANSWERS)] - Clear all of your own answers for this round.
+&MSG`PROMPT_ENDROUND Scattergories=[ansi(hy,SCATTER CLEAR ANSWERS)] to clear your answers.%r[ansi(hy,SCATTER CLEAR ALL ANSWERS)] to reset this round.
+&MSG`PROMPT_NEWGAME Scattergories=This is a new game still in the packaging. After unboxing it is recommended that you [ansi(hy,SCATTER ROLL)] and [ansi(hy,SCATTER SHUFFLE)] to begin the game.
+&MSG`PROMPT_NOLETTER Scattergories=[ansi(hy,SCATTER ROLL)] to roll a new letter.
+&MSG`PROMPT_NOLIST Scattergories=[ansi(hy,SCATTER SHUFFLE)] to pick a random list.
+&MSG`PROMPT_PLAYING Scattergories=[ansi(hy,SCATTER ANSWER <#> <word or phrase>)]%r[ansi(hy,SCATTER LIST ALL ANSWERS)] to view everyone's answers.%r[ansi(hy,SCATTER CLEAR ANSWERS)] to clear your answers.%r[ansi(hy,SCATTER CLEAR ALL ANSWERS)] to reset this round.
+&MSG`PROMPT_ROLL Scattergories=[ansi(hy,SCATTER SHUFFLE \[<1-18>\])] to pick a category list.%r[ansi(hy,SCATTER LIST)] to view current category list.
+&MSG`PROMPT_SHUFFLE Scattergories=[ansi(hy,SCATTER ROLL \[ADV\])] to pick a random letter \(ADV adds Q, U, V, X, Y, and Z\).%r[ansi(hy,SCATTER LIST)] to view current category list.
+
+&STATUS Scattergories=A box containing the game of Scattergories is available to play.
+@set Scattergories/STATUS=no_command visual
