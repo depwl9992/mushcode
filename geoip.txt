@@ -6,7 +6,7 @@
 @@ Python: https://geoip2.readthedocs.io/en/latest/
 @@ PHP: https://packagist.org/packages/geoip2/geoip2
 @@
-@@ Basic code modified from Disloops OpenAI Oracle (
+@@ Basic code modified from Disloops OpenAI Oracle (https://disloops.com/mush-gpt-the-oracle/ | https://github.com/disloops/mushcode/blob/master/scripts/mush_gpt.py)
 
 @@ geoip (#10744)
 @create geoip
